@@ -22,6 +22,41 @@
   let currentView = "overview";
   let currentStage = null;
 
+  const titleAcronyms = new Map([
+    ["ai", "AI"], ["api", "API"], ["apis", "APIs"], ["ci", "CI"], ["dataops", "DataOps"],
+    ["devops", "DevOps"], ["finops", "FinOps"], ["iam", "IAM"], ["llm", "LLM"],
+    ["ai/ml", "AI/ML"], ["ci/cd", "CI/CD"], ["dpo", "DPO"], ["grc", "GRC"],
+    ["hr", "HR"], ["isms", "ISMS"], ["it", "IT"], ["itsm", "ITSM"], ["kpi", "KPI"],
+    ["kpis", "KPIs"], ["mcp", "MCP"], ["mlops", "MLOps"], ["pii", "PII"], ["qa", "QA"],
+    ["rag", "RAG"], ["raci", "RACI"], ["sla", "SLA"], ["slo", "SLO"], ["sme", "SME"],
+    ["smes", "SMEs"], ["soc", "SOC"], ["sop", "SOP"], ["sre", "SRE"], ["ui", "UI"],
+    ["ux", "UX"]
+  ]);
+  const titleMinorWords = new Set(["a", "an", "and", "as", "at", "but", "by", "for", "from", "in", "into", "nor", "of", "on", "or", "per", "the", "to", "via", "with"]);
+
+  function titleCase(value) {
+    if (!value) return value;
+    const words = value.trim().split(/\s+/);
+    return words.map((word, wordIndex) => {
+      if (word === "&") return word;
+      const match = word.match(/^([^A-Za-z0-9]*)(.*?)([^A-Za-z0-9]*)$/);
+      if (!match) return word;
+      const [, prefix, core, suffix] = match;
+      const parts = core.split(/([-\u2013])/);
+      const converted = parts.map((part, partIndex) => {
+        if (part === "-" || part === "–") return part;
+        const lower = part.toLowerCase();
+        const acronym = titleAcronyms.get(lower);
+        if (acronym) return acronym;
+        const isFirst = wordIndex === 0 && partIndex === 0;
+        const isLast = wordIndex === words.length - 1 && partIndex === parts.length - 1;
+        if (!isFirst && !isLast && titleMinorWords.has(lower)) return lower;
+        return lower.charAt(0).toUpperCase() + lower.slice(1);
+      }).join("");
+      return `${prefix}${converted}${suffix}`;
+    }).join(" ");
+  }
+
   const icons = {
     arrow: '<path d="M5 12h14M14 7l5 5-5 5"/>',
     check: '<path d="m5 12 4 4L19 6"/>',
@@ -62,16 +97,16 @@
     rail.innerHTML = `
       <nav class="rail-mobile-nav" aria-label="Guide sections">
         <button class="nav-link" type="button" data-view="overview">Overview</button>
-        <button class="nav-link" type="button" data-view="library">Library</button>
+        <button class="nav-link" type="button" data-view="library">Activity Library</button>
       </nav>
-      <p class="rail-label">Delivery path</p>
+      <p class="rail-label">Delivery Path</p>
       <div class="stage-nav">
         ${data.stages.map(stage => `
           <button class="stage-nav-button ${currentStage === stage.id ? "is-active" : ""}"
             type="button" data-stage="${stage.id}" style="--stage-color:${stage.color}">
             <span class="stage-number">${String(stage.number).padStart(2, "0")}</span>
             <span>
-              <span class="stage-nav-title">${stage.shortTitle}</span>
+              <span class="stage-nav-title">${titleCase(stage.shortTitle)}</span>
               <span class="stage-nav-meta">${stage.duration}</span>
             </span>
           </button>
@@ -112,22 +147,22 @@
 
   function renderOverview() {
     const nodes = data.continuousTracks.map((track, index) =>
-      `<span class="orbit-node" style="--node-color:${track.color}" title="${track.title}">${String(index + 1).padStart(2, "0")}</span>`
+      `<span class="orbit-node" style="--node-color:${track.color}" title="${titleCase(track.title)}">${String(index + 1).padStart(2, "0")}</span>`
     ).join("");
 
     main.innerHTML = `
       <section class="hero">
         <div class="hero-copy">
-          <p class="eyebrow">From first question to final shutdown</p>
-          <h1>Build agents that earn their autonomy.</h1>
+          <p class="eyebrow">From First Question to Final Shutdown</p>
+          <h1>Build Agents That Earn Their Autonomy.</h1>
           <p>A field guide for turning a promising use case into a useful, secure, measurable, and responsibly operated agentic AI product.</p>
           <div class="hero-actions">
-            <button class="button primary" type="button" data-stage="discover">Begin the lifecycle <span class="icon" data-icon="arrow"></span></button>
+            <button class="button primary" type="button" data-stage="discover">Begin the Lifecycle <span class="icon" data-icon="arrow"></span></button>
           </div>
         </div>
         <div class="hero-orbit" aria-label="Five continuous workstreams surround the lifecycle">
           <div class="orbit-ring"></div>
-          <div class="orbit-core">Trustworthy value</div>
+          <div class="orbit-core">Trustworthy Value</div>
           ${nodes}
         </div>
       </section>
@@ -135,8 +170,8 @@
       <section class="section" aria-labelledby="lifecycle-heading">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">The delivery path</p>
-            <h2 id="lifecycle-heading">Nine stages. One learning loop.</h2>
+            <p class="eyebrow">The Delivery Path</p>
+            <h2 id="lifecycle-heading">Nine Stages. One Learning Loop.</h2>
           </div>
           <p>Compare conventional elapsed time with an AI coding-agent-assisted range. Agent-assisted lower bounds assume reusable foundations, rapid access, and low-risk scope; approvals, data readiness, human review, and adoption still determine the upper bounds.</p>
         </div>
@@ -147,14 +182,14 @@
                 <span class="stage-index">Stage ${String(stage.number).padStart(2, "0")}</span>
                 <span class="stage-duration">${stage.duration}</span>
               </div>
-              <h3>${stage.title}</h3>
+              <h3>${titleCase(stage.title)}</h3>
               <p>${stage.tagline}</p>
               <div class="stage-agent-time">
-                <span><span class="icon" data-icon="spark"></span> With coding agent</span>
+                <span><span class="icon" data-icon="spark"></span> With Coding Agent</span>
                 <strong>${stage.assistedDuration}</strong>
               </div>
               <div class="stage-card-foot">
-                <span>${stage.activities.length} essential activities</span>
+                <span>${stage.activities.length} Essential Activities</span>
                 <span class="stage-card-arrow"><span class="icon" data-icon="arrow"></span></span>
               </div>
             </article>
@@ -165,8 +200,8 @@
       <section class="section" aria-labelledby="tracks-heading">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">Always on</p>
-            <h2 id="tracks-heading">Continuous workstreams</h2>
+            <p class="eyebrow">Always On</p>
+            <h2 id="tracks-heading">Continuous Workstreams</h2>
           </div>
           <p>These responsibilities do not belong at the end of delivery. Their controls, evidence, and owners evolve through every stage.</p>
         </div>
@@ -174,9 +209,9 @@
           ${data.continuousTracks.map(track => `
             <article class="track-card" style="--track-color:${track.color}" data-workstream="${track.id}" role="button" tabindex="0">
               <span class="track-icon icon" data-icon="${track.icon}"></span>
-              <h3>${track.title}</h3>
+              <h3>${titleCase(track.title)}</h3>
               <p>${track.summary}</p>
-              <span class="track-card-link">Deep dive <span class="icon" data-icon="arrow"></span></span>
+              <span class="track-card-link">Deep Dive <span class="icon" data-icon="arrow"></span></span>
             </article>
           `).join("")}
         </div>
@@ -185,11 +220,11 @@
       <section class="section principle-banner" aria-labelledby="principle-heading">
         <div class="principle-mark" aria-hidden="true">
           <span></span><span></span><span></span>
-          <strong>Minimum necessary agency</strong>
+          <strong>Minimum Necessary Agency</strong>
         </div>
         <div class="principle-copy">
-          <p class="eyebrow">The central design rule</p>
-          <h2 id="principle-heading">Autonomy is a risk budget.</h2>
+          <p class="eyebrow">The Central Design Rule</p>
+          <h2 id="principle-heading">Autonomy Is a Risk Budget.</h2>
           <p>Grant it deliberately, action by action, as evidence and controls mature. More agency is not automatically a more advanced solution.</p>
           <div class="principle-list">
             ${data.principles.map((principle, index) => `
@@ -205,14 +240,14 @@
     return `
       <article class="activity-card" style="--stage-color:${stage.color}">
         <div class="activity-copy">
-          <h3>${activity.title}</h3>
+          <h3>${titleCase(activity.title)}</h3>
           <p>${activity.summary}</p>
           <div class="activity-tags">
-            ${activity.tags.map(tag => `<span class="tag">${tag}</span>`).join("")}
+            ${activity.tags.map(tag => `<span class="tag">${titleCase(tag)}</span>`).join("")}
           </div>
         </div>
         <button class="activity-open" type="button" data-activity="${activity.id}">
-          Deep dive <span class="icon" data-icon="arrow"></span>
+          Deep Dive <span class="icon" data-icon="arrow"></span>
         </button>
       </article>
     `;
@@ -223,16 +258,16 @@
     main.innerHTML = `
       <section class="stage-hero" style="--stage-color:${stage.color}" data-stage-number="${String(stage.number).padStart(2, "0")}">
         <div class="stage-hero-copy">
-          <p class="stage-kicker">Stage ${String(stage.number).padStart(2, "0")} · ${stage.phase}</p>
-          <h1>${stage.title}</h1>
+          <p class="stage-kicker">Stage ${String(stage.number).padStart(2, "0")} · ${titleCase(stage.phase)}</p>
+          <h1>${titleCase(stage.title)}</h1>
           <p>${stage.description}</p>
           <div class="hero-actions">
-            <button class="button primary" type="button" data-scroll="activities">Explore ${stage.activities.length} activities</button>
+            <button class="button primary" type="button" data-scroll="activities">Explore ${stage.activities.length} Activities</button>
           </div>
         </div>
         <aside class="gate-card">
-          <span class="gate-label"><span class="icon" data-icon="gate"></span> Evidence gate</span>
-          <h3>${stage.gate.title}</h3>
+          <span class="gate-label"><span class="icon" data-icon="gate"></span> Evidence Gate</span>
+          <h3>${titleCase(stage.gate.title)}</h3>
           <p>Advance when the evidence—not the calendar—supports these conditions:</p>
           <ul>${stage.gate.criteria.map(item => `<li>${item}</li>`).join("")}</ul>
         </aside>
@@ -240,19 +275,19 @@
 
       <div class="stage-meta-row">
         <div class="meta-card">
-          <span class="meta-card-label"><span class="icon" data-icon="clock"></span> Typical elapsed time</span>
+          <span class="meta-card-label"><span class="icon" data-icon="clock"></span> Typical Elapsed Time</span>
           <p>${stage.duration}</p>
         </div>
         <div class="meta-card agent-time-card">
-          <span class="meta-card-label"><span class="icon" data-icon="spark"></span> With coding agent</span>
+          <span class="meta-card-label"><span class="icon" data-icon="spark"></span> With Coding Agent</span>
           <p>${stage.assistedDuration}</p>
         </div>
         <div class="meta-card">
-          <span class="meta-card-label"><span class="icon" data-icon="users"></span> Core team</span>
+          <span class="meta-card-label"><span class="icon" data-icon="users"></span> Core Team</span>
           <p>${stage.roles}</p>
         </div>
         <div class="meta-card">
-          <span class="meta-card-label"><span class="icon" data-icon="method"></span> Working method</span>
+          <span class="meta-card-label"><span class="icon" data-icon="method"></span> Working Method</span>
           <p>${stage.method}</p>
         </div>
       </div>
@@ -260,8 +295,8 @@
       <section class="section" id="activities" aria-labelledby="activities-heading" tabindex="-1">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">Execution guide</p>
-            <h2 id="activities-heading">Essential activities</h2>
+            <p class="eyebrow">Execution Guide</p>
+            <h2 id="activities-heading">Essential Activities</h2>
           </div>
           <p>Open any activity for a practical sequence, expected evidence, accountable owner, and the mistakes that most often undermine it.</p>
         </div>
@@ -273,15 +308,15 @@
       <section class="section" aria-labelledby="outcomes-heading">
         <div class="section-heading">
           <div>
-            <p class="eyebrow">Stage outputs</p>
-            <h2 id="outcomes-heading">What should exist afterward</h2>
+            <p class="eyebrow">Stage Outputs</p>
+            <h2 id="outcomes-heading">What Should Exist Afterward</h2>
           </div>
         </div>
         <div class="track-grid">
           ${stage.outcomes.map((outcome, index) => `
             <article class="track-card" style="--track-color:${stage.color}">
               <span class="track-icon">${String(index + 1).padStart(2, "0")}</span>
-              <h3>${outcome}</h3>
+              <h3>${titleCase(outcome)}</h3>
               <p>Versioned, owned, and linked to the evidence used at the ${stage.gate.title.toLowerCase()}.</p>
             </article>
           `).join("")}
@@ -295,8 +330,8 @@
     main.innerHTML = `
       <header class="page-head">
         <div>
-          <p class="eyebrow">Reference workspace</p>
-          <h1>Activity library</h1>
+          <p class="eyebrow">Reference Workspace</p>
+          <h1>Activity Library</h1>
           <p>Search the complete lifecycle by activity, stage, discipline, output, consideration, or accountable owner.</p>
         </div>
       </header>
@@ -308,15 +343,15 @@
         <label class="field">
           <span class="icon" data-icon="layers"></span>
           <select id="stage-filter" aria-label="Filter by stage">
-            <option value="all">All stages</option>
-            ${data.stages.map(stage => `<option value="${stage.id}" ${stageFilter === stage.id ? "selected" : ""}>${stage.number}. ${stage.title}</option>`).join("")}
+            <option value="all">All Stages</option>
+            ${data.stages.map(stage => `<option value="${stage.id}" ${stageFilter === stage.id ? "selected" : ""}>${stage.number}. ${titleCase(stage.title)}</option>`).join("")}
           </select>
         </label>
         <label class="field">
           <span class="icon" data-icon="filter"></span>
           <select id="tag-filter" aria-label="Filter by discipline">
-            <option value="all">All disciplines</option>
-            ${tags.map(tag => `<option value="${tag}" ${tagFilter === tag ? "selected" : ""}>${tag}</option>`).join("")}
+            <option value="all">All Disciplines</option>
+            ${tags.map(tag => `<option value="${tag}" ${tagFilter === tag ? "selected" : ""}>${titleCase(tag)}</option>`).join("")}
           </select>
         </label>
       </div>
@@ -350,19 +385,19 @@
     document.querySelector("#library-count").textContent = `${matches.length} ${matches.length === 1 ? "activity" : "activities"}`;
     grid.innerHTML = matches.length ? matches.map(activity => `
       <article class="library-card" style="--card-color:${activity.stage.color}">
-        <span class="library-card-stage">${String(activity.stage.number).padStart(2, "0")} · ${activity.stage.title}</span>
-        <h3>${activity.title}</h3>
+        <span class="library-card-stage">${String(activity.stage.number).padStart(2, "0")} · ${titleCase(activity.stage.title)}</span>
+        <h3>${titleCase(activity.title)}</h3>
         <p>${activity.summary}</p>
-        <div class="activity-tags">${activity.tags.map(tag => `<span class="tag">${tag}</span>`).join("")}</div>
+        <div class="activity-tags">${activity.tags.map(tag => `<span class="tag">${titleCase(tag)}</span>`).join("")}</div>
         <div class="library-card-foot">
-          <span class="tag">${activity.owner}</span>
-          <button class="activity-open" type="button" data-activity="${activity.id}">Deep dive <span class="icon" data-icon="arrow"></span></button>
+          <span class="tag">${titleCase(activity.owner)}</span>
+          <button class="activity-open" type="button" data-activity="${activity.id}">Deep Dive <span class="icon" data-icon="arrow"></span></button>
         </div>
       </article>
     `).join("") : `
       <div class="empty-state">
         <span class="icon" data-icon="search"></span>
-        <h3>No matching activities</h3>
+        <h3>No Matching Activities</h3>
         <p>Try a broader term or reset one of the filters.</p>
       </div>
     `;
@@ -377,24 +412,24 @@
 
     drawerContent.innerHTML = `
       <div class="drawer-head">
-        <span class="drawer-stage">${String(stage.number).padStart(2, "0")} · ${stage.title}</span>
+        <span class="drawer-stage">${String(stage.number).padStart(2, "0")} · ${titleCase(stage.title)}</span>
         <button class="drawer-close" type="button" data-action="close-drawer" aria-label="Close details">
           <span class="icon" data-icon="close"></span>
         </button>
       </div>
       <div class="drawer-main" style="--drawer-color:${stage.color}">
-        <h2 id="drawer-title">${activity.title}</h2>
+        <h2 id="drawer-title">${titleCase(activity.title)}</h2>
         <p class="drawer-lead">${activity.summary}</p>
-        <div class="activity-tags">${activity.tags.map(tag => `<span class="tag">${tag}</span>`).join("")}</div>
+        <div class="activity-tags">${activity.tags.map(tag => `<span class="tag">${titleCase(tag)}</span>`).join("")}</div>
 
         <div class="drawer-owner">
           <span class="owner-avatar">${initials}</span>
-          <span><strong>Accountable lead</strong><span>${activity.owner}</span></span>
+          <span><strong>Accountable Lead</strong><span>${titleCase(activity.owner)}</span></span>
         </div>
 
         <div class="drawer-tabs" role="tablist" aria-label="Activity details">
           <button class="drawer-tab is-active" type="button" role="tab" aria-selected="true" data-drawer-tab="overview">Overview</button>
-          <button class="drawer-tab" type="button" role="tab" aria-selected="false" data-drawer-tab="steps">Action plan</button>
+          <button class="drawer-tab" type="button" role="tab" aria-selected="false" data-drawer-tab="steps">Action Plan</button>
           <button class="drawer-tab" type="button" role="tab" aria-selected="false" data-drawer-tab="evidence">Evidence</button>
         </div>
 
@@ -405,12 +440,12 @@
           </section>
           ${activity.flow ? `
             <section class="drawer-section">
-              <h3>${activity.flow.title}</h3>
+              <h3>${titleCase(activity.flow.title)}</h3>
               <div class="rag-flow">
                 ${activity.flow.items.map((item, index) => `
                   <div class="rag-flow-item">
                     <span class="rag-flow-number">${index + 1}</span>
-                    <span><strong>${item.title}</strong><small>${item.detail}</small></span>
+                    <span><strong>${titleCase(item.title)}</strong><small>${item.detail}</small></span>
                   </div>
                 `).join("")}
               </div>
@@ -418,38 +453,38 @@
             </section>
           ` : ""}
           <section class="drawer-section">
-            <h3>Why it matters</h3>
+            <h3>Why It Matters</h3>
             <p>${activity.summary} Skipping this work pushes uncertainty into later stages, where it becomes harder and more expensive to correct.</p>
           </section>
           <section class="drawer-section">
-            <h3>Key considerations</h3>
+            <h3>Key Considerations</h3>
             <ul class="consideration-list">${activity.considerations.map(item => `<li>${item}</li>`).join("")}</ul>
           </section>
         </div>
 
         <div class="drawer-panel" data-drawer-panel="steps" hidden>
           <section class="drawer-section">
-            <h3>Recommended sequence</h3>
+            <h3>Recommended Sequence</h3>
             <ol class="step-list">${activity.steps.map(step => `<li>${step}</li>`).join("")}</ol>
           </section>
         </div>
 
         <div class="drawer-panel" data-drawer-panel="evidence" hidden>
           <section class="drawer-section">
-            <h3>Expected outputs</h3>
+            <h3>Expected Outputs</h3>
             <ul class="output-list">${activity.outputs.map(output => `<li>${output}</li>`).join("")}</ul>
           </section>
           <section class="drawer-section">
-            <h3>Definition of done</h3>
+            <h3>Definition of Done</h3>
             <div class="evidence-box">
-              <strong>Evidence, not assertion</strong>
+              <strong>Evidence, Not Assertion</strong>
               <p>${activity.evidence}</p>
             </div>
           </section>
         </div>
 
         <div class="drawer-actions">
-          <button class="button" type="button" data-stage="${stage.id}">Open stage</button>
+          <button class="button" type="button" data-stage="${stage.id}">Open Stage</button>
         </div>
       </div>
     `;
@@ -469,24 +504,24 @@
 
     drawerContent.innerHTML = `
       <div class="drawer-head">
-        <span class="drawer-stage">Continuous workstream · Always on</span>
+        <span class="drawer-stage">Continuous Workstream · Always On</span>
         <button class="drawer-close" type="button" data-action="close-drawer" aria-label="Close details">
           <span class="icon" data-icon="close"></span>
         </button>
       </div>
       <div class="drawer-main workstream-drawer" style="--drawer-color:${track.color}">
         <span class="workstream-hero-icon icon" data-icon="${track.icon}"></span>
-        <h2 id="drawer-title">${track.title}</h2>
+        <h2 id="drawer-title">${titleCase(track.title)}</h2>
         <p class="drawer-lead">${track.summary}</p>
 
         <div class="drawer-owner">
           <span class="owner-avatar">${initials}</span>
-          <span><strong>Accountable ownership</strong><span>${track.accountable}</span></span>
+          <span><strong>Accountable Ownership</strong><span>${titleCase(track.accountable)}</span></span>
         </div>
 
         <div class="drawer-tabs" role="tablist" aria-label="${track.title} details">
           <button class="drawer-tab is-active" type="button" role="tab" aria-selected="true" data-drawer-tab="overview">Overview</button>
-          <button class="drawer-tab" type="button" role="tab" aria-selected="false" data-drawer-tab="lifecycle">Lifecycle lens</button>
+          <button class="drawer-tab" type="button" role="tab" aria-selected="false" data-drawer-tab="lifecycle">Lifecycle Lens</button>
           <button class="drawer-tab" type="button" role="tab" aria-selected="false" data-drawer-tab="evidence">Evidence</button>
         </div>
 
@@ -500,24 +535,24 @@
             <p>${track.objective}</p>
           </section>
           <section class="drawer-section">
-            <h3>Core responsibilities</h3>
+            <h3>Core Responsibilities</h3>
             <ul class="workstream-list">${track.responsibilities.map(item => `<li>${item}</li>`).join("")}</ul>
           </section>
           <section class="drawer-section">
-            <h3>Key partners</h3>
-            <div class="partner-cloud">${track.partners.map(partner => `<span class="tag">${partner}</span>`).join("")}</div>
+            <h3>Key Partners</h3>
+            <div class="partner-cloud">${track.partners.map(partner => `<span class="tag">${titleCase(partner)}</span>`).join("")}</div>
           </section>
         </div>
 
         <div class="drawer-panel" data-drawer-panel="lifecycle" hidden>
           <section class="drawer-section">
-            <h3>Questions to ask at every stage</h3>
+            <h3>Questions to Ask at Every Stage</h3>
             <p>This workstream continues throughout delivery. Use these questions to keep it active as the product evolves.</p>
             <div class="lifecycle-lens">
               ${track.lifecycle.map(([stage, question], index) => `
                 <article class="lifecycle-lens-item">
                   <span class="lens-number">${String(index + 1).padStart(2, "0")}</span>
-                  <span><strong>${stage}</strong><p>${question}</p></span>
+                  <span><strong>${titleCase(stage)}</strong><p>${question}</p></span>
                 </article>
               `).join("")}
             </div>
@@ -526,15 +561,15 @@
 
         <div class="drawer-panel" data-drawer-panel="evidence" hidden>
           <section class="drawer-section">
-            <h3>Evidence to maintain</h3>
+            <h3>Evidence to Maintain</h3>
             <ul class="output-list">${track.evidence.map(item => `<li>${item}</li>`).join("")}</ul>
           </section>
           <section class="drawer-section">
-            <h3>Signals to monitor</h3>
+            <h3>Signals to Monitor</h3>
             <ul class="signal-list">${track.indicators.map(item => `<li>${item}</li>`).join("")}</ul>
           </section>
           <section class="drawer-section">
-            <h3>Common failure patterns</h3>
+            <h3>Common Failure Patterns</h3>
             <ul class="consideration-list">${track.pitfalls.map(item => `<li>${item}</li>`).join("")}</ul>
           </section>
         </div>
@@ -585,26 +620,26 @@
       ${trackMatches.map(track => `
         <button class="search-result" type="button" data-workstream="${track.id}">
           <span class="search-result-icon icon" style="--result-color:${track.color}" data-icon="${track.icon}"></span>
-          <span><strong>${track.title}</strong><small>Continuous across all nine lifecycle stages</small></span>
+          <span><strong>${titleCase(track.title)}</strong><small>Continuous across all nine lifecycle stages</small></span>
           <span class="search-result-type">Workstream</span>
         </button>
       `).join("")}
       ${stageMatches.map(stage => `
         <button class="search-result" type="button" data-stage="${stage.id}">
           <span class="search-result-icon" style="--result-color:${stage.color}">${String(stage.number).padStart(2, "0")}</span>
-          <span><strong>${stage.title}</strong><small>${stage.phase}</small></span>
+          <span><strong>${titleCase(stage.title)}</strong><small>${titleCase(stage.phase)}</small></span>
           <span class="search-result-type">Stage</span>
         </button>
       `).join("")}
       ${activityMatches.map(activity => `
         <button class="search-result" type="button" data-activity="${activity.id}">
           <span class="search-result-icon" style="--result-color:${activity.stage.color}">A</span>
-          <span><strong>${activity.title}</strong><small>${activity.stage.title} · ${activity.owner}</small></span>
+          <span><strong>${titleCase(activity.title)}</strong><small>${titleCase(activity.stage.title)} · ${titleCase(activity.owner)}</small></span>
           <span class="search-result-type">Activity</span>
         </button>
       `).join("")}
       ${!trackMatches.length && !stageMatches.length && !activityMatches.length ? `
-        <div class="empty-state"><span class="icon" data-icon="search"></span><h3>No results</h3><p>Try a role, output, discipline, or stage name.</p></div>
+        <div class="empty-state"><span class="icon" data-icon="search"></span><h3>No Results</h3><p>Try a role, output, discipline, or stage name.</p></div>
       ` : ""}
     `;
     hydrateIcons(searchResults);

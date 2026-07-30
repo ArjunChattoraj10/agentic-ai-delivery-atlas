@@ -1,0 +1,19 @@
+{
+  "id": "./",
+  "name": "Agentic AI Delivery Atlas",
+  "short_name": "Delivery Atlas",
+  "description": "An interactive guide for designing, building, releasing, and operating agentic AI solutions.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f7f3e8",
+  "theme_color": "#17231f",
+  "icons": [
+    {
+      "src": "logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

@@ -216,7 +216,7 @@ window.LIFECYCLE_DATA = {
   continuousTracks: [
     {
       id: "governance",
-      title: "Governance & assurance",
+      title: "Governance & Assurance",
       icon: "scale",
       color: "#5576b8",
       summary: "Decision rights, evidence, approvals, traceability, and policy alignment at every gate.",
@@ -224,7 +224,7 @@ window.LIFECYCLE_DATA = {
     },
     {
       id: "security",
-      title: "Security & privacy",
+      title: "Security & Privacy",
       icon: "shield",
       color: "#167a67",
       summary: "Threat modeling, identity, data protection, supply chain controls, and adversarial testing by design.",
@@ -240,7 +240,7 @@ window.LIFECYCLE_DATA = {
     },
     {
       id: "finops",
-      title: "FinOps & sustainability",
+      title: "FinOps & Sustainability",
       icon: "chart",
       color: "#d39834",
       summary: "Token economics, capacity, budgets, latency, carbon-aware choices, and value realization.",
@@ -248,7 +248,7 @@ window.LIFECYCLE_DATA = {
     },
     {
       id: "adoption",
-      title: "People & adoption",
+      title: "People & Adoption",
       icon: "people",
       color: "#72466b",
       summary: "Role changes, training, communications, support, feedback, and durable operating ownership.",

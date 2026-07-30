@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">Agentic AI Delivery Atlas</title>
+  <rect width="512" height="512" rx="166" fill="#17231f"/>
+  <g fill="none" stroke="#f7f3e8" stroke-width="28">
+    <rect x="89" y="104" width="110" height="304" rx="55" transform="rotate(38 144 256)"/>
+    <rect x="201" y="104" width="110" height="304" rx="55" transform="rotate(38 256 256)"/>
+    <rect x="313" y="104" width="110" height="304" rx="55" transform="rotate(38 368 256)"/>
+  </g>
+</svg>
