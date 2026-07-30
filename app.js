@@ -57,6 +57,43 @@
     }).join(" ");
   }
 
+  function searchableText(...values) {
+    const strings = [];
+    const collect = value => {
+      if (typeof value === "string") strings.push(value);
+      else if (Array.isArray(value)) value.forEach(collect);
+      else if (value && typeof value === "object") Object.values(value).forEach(collect);
+    };
+    values.forEach(collect);
+    return strings.join(" ").toLowerCase();
+  }
+
+  function matchesSearch(text, query) {
+    const terms = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    return terms.every(term => text.includes(term));
+  }
+
+  const activitySearchIndex = new Map(allActivities.map(activity => [
+    activity.id,
+    searchableText(
+      activity.id, activity.title, activity.summary, activity.explanation, activity.owner,
+      activity.tags, activity.steps, activity.outputs, activity.considerations, activity.evidence,
+      activity.flow, activity.stage.title, activity.stage.shortTitle, activity.stage.phase,
+      activity.stage.tagline
+    )
+  ]));
+  const stageSearchIndex = new Map(data.stages.map(stage => [
+    stage.id,
+    searchableText(
+      stage.id, stage.title, stage.shortTitle, stage.phase, stage.tagline, stage.description,
+      stage.outcomes, stage.roles, stage.method, stage.gate
+    )
+  ]));
+  const trackSearchIndex = new Map(data.continuousTracks.map(track => [
+    track.id,
+    searchableText(track)
+  ]));
+
   const icons = {
     arrow: '<path d="M5 12h14M14 7l5 5-5 5"/>',
     check: '<path d="m5 12 4 4L19 6"/>',
@@ -366,17 +403,12 @@
   function updateLibraryResults() {
     const grid = document.querySelector("#library-grid");
     if (!grid) return;
-    const query = document.querySelector("#library-search").value.trim().toLowerCase();
+    const query = document.querySelector("#library-search").value;
     const stageFilter = document.querySelector("#stage-filter").value;
     const tagFilter = document.querySelector("#tag-filter").value;
 
     const matches = allActivities.filter(activity => {
-      const haystack = [
-        activity.title, activity.summary, activity.owner, ...activity.tags,
-        ...activity.steps, ...activity.outputs, ...activity.considerations,
-        activity.stage.title
-      ].join(" ").toLowerCase();
-      return (!query || haystack.includes(query))
+      return matchesSearch(activitySearchIndex.get(activity.id), query)
         && (stageFilter === "all" || activity.stage.id === stageFilter)
         && (tagFilter === "all" || activity.tags.includes(tagFilter));
     });
@@ -598,21 +630,15 @@
   }
 
   function updateSearchResults(query) {
-    const normalized = query.trim().toLowerCase();
+    const normalized = query.trim();
     const trackMatches = data.continuousTracks.filter(track =>
-      !normalized || [
-        track.title, track.summary, track.explanation, track.objective, track.accountable,
-        ...track.partners, ...track.responsibilities, ...track.evidence, ...track.indicators
-      ].join(" ").toLowerCase().includes(normalized)
+      matchesSearch(trackSearchIndex.get(track.id), normalized)
     ).slice(0, normalized ? 5 : 2);
     const stageMatches = data.stages.filter(stage =>
-      !normalized || `${stage.title} ${stage.description} ${stage.tagline}`.toLowerCase().includes(normalized)
+      matchesSearch(stageSearchIndex.get(stage.id), normalized)
     ).slice(0, normalized ? 4 : 3);
     const activityMatches = allActivities.filter(activity =>
-      !normalized || [
-        activity.title, activity.summary, activity.owner, activity.stage.title,
-        ...activity.tags, ...activity.outputs
-      ].join(" ").toLowerCase().includes(normalized)
+      matchesSearch(activitySearchIndex.get(activity.id), normalized)
     ).slice(0, normalized ? 8 : 5);
 
     searchResults.innerHTML = `

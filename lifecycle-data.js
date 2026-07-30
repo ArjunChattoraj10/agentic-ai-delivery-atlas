@@ -14,7 +14,7 @@ const SIMPLE_EXPLANATIONS = {
   "data-inventory": "Make a complete list of the information the agent may use. For every source, identify who owns it, whether it is trustworthy, how sensitive it is, and whether AI use is permitted.",
   "data-access": "Give the system only the data access it needs, using secure identities and permissions. The same access rules that protect the original information must continue to protect what the agent retrieves.",
   "curation-metadata": "Clean and organize source material so the agent can understand and use it correctly. Remove outdated or duplicate content and add labels such as owner, date, topic, permissions, and original source.",
-  "retrieval-pipeline": "Turn approved source content into a searchable knowledge base, then connect that knowledge base to the model. When a user asks a question, the system finds the best chunks, adds them to the model's prompt, and asks the model to answer from that evidence. This complete pattern is called Retrieval-Augmented Generation, or RAG.",
+  "retrieval-pipeline": "Turn approved source content into a searchable knowledge base, then connect that knowledge base to the model. When a user asks a question, the system scores and ranks possible chunks, adds the best authorized evidence to the model's prompt, and asks the model to answer from it. The team tests whether those scores actually select useful evidence instead of treating a similarity score as proof of quality. This complete pattern is called Retrieval-Augmented Generation, or RAG.",
   "knowledge-operations": "Create the ongoing process that keeps the agent's knowledge accurate and current. This covers adding changes, detecting failures, removing deleted content, and rebuilding indexes when needed.",
 
   "solution-architecture": "Draw the blueprint for the complete solution. Show how users, agents, models, data, tools, policies, and external systems connect, including what should happen when a component fails.",
@@ -29,7 +29,7 @@ const SIMPLE_EXPLANATIONS = {
   "experience-integration": "Build the interface through which people work with the agent. Users should be able to understand its status and evidence, approve important actions, correct mistakes, and recover when something fails.",
   "telemetry-controls": "Record enough information to understand each run and control the system in production. This includes timing, model and tool calls, costs, errors, policy decisions, limits, feature switches, and emergency shutoffs.",
 
-  "offline-evaluation": "Run the system against a controlled set of realistic test cases before exposing it to users. Compare the results with expected answers and previous versions to find weaknesses and regressions.",
+  "offline-evaluation": "Run the system against a controlled set of realistic test cases before exposing it to users. Record exactly which system version, test data, metrics, graders, and pass thresholds produced each score so results remain reproducible and comparable as the product and its evaluation methods evolve.",
   "safety-red-team": "Deliberately try to make the system behave unsafely or break its rules. Test attacks, misleading content, data theft attempts, harmful requests, and unauthorized actions so weaknesses can be fixed before release.",
   "human-quality-review": "Ask representative users and qualified experts to judge the system on realistic work. This reveals whether it is useful, understandable, trustworthy, and easy to supervise—not just technically correct.",
   "performance-resilience": "Test whether the system stays fast, affordable, and reliable under real demand and failures. Simulate busy periods, unavailable models, broken tools, network problems, and quota limits.",
@@ -43,7 +43,7 @@ const SIMPLE_EXPLANATIONS = {
 
   "system-monitoring": "Continuously watch both the technical service and the quality of the agent's behavior. Look for downtime, slow responses, rising costs, bad tool actions, policy violations, drift, and user problems.",
   "incident-management": "Use a prepared process when the AI system causes or nearly causes harm, exposes data, takes a wrong action, or fails badly. Contain the problem, investigate it, communicate clearly, and prevent it from happening again.",
-  "continuous-change": "Update models, prompts, tools, policies, and knowledge through the same controlled process used for other production changes. Test each change, release it gradually, monitor it, and keep a way to roll back.",
+  "continuous-change": "Update models, prompts, architecture, retrieval, tools, policies, knowledge, and evaluation criteria through a controlled process. Link each change to versioned test results, release it gradually, monitor it, and preserve a meaningful comparison with earlier versions and a way to roll back.",
   "value-cost-optimization": "Find ways to deliver better results with less time, computing, and expense. Savings only count when the system still meets its quality, safety, reliability, and user-experience requirements.",
   "periodic-assurance": "Recheck the product on a regular schedule instead of relying forever on its original approval. Confirm that its users, purpose, data, vendors, risks, controls, and legal obligations have not changed in unsafe ways.",
 
@@ -461,13 +461,16 @@ window.LIFECYCLE_DATA = {
           "Create embeddings and a vector index where semantic similarity helps; compare this with lexical, hybrid, filtered, and graph retrieval.",
           "At runtime, retrieve candidates from the user's question, enforce access filters, rerank the results, and select the best top-K chunks.",
           "Insert the selected chunks and source references into the model prompt, generate the answer, and require citations back to the evidence.",
-          "Measure retrieval recall and precision together with grounded-answer quality, citation coverage, latency, and cost."
-        ], ["RAG architecture and runtime data flow", "Chunked and indexed knowledge base", "Retrieval and grounded-answer benchmark"], [
+          "Calibrate similarity and reranker score thresholds on representative queries, including relevant, ambiguous, and no-answer cases.",
+          "Measure recall@K, precision@K, MRR or nDCG, grounded-answer quality, citation correctness, latency, and cost using a versioned benchmark."
+        ], ["RAG architecture and runtime data flow", "Chunked and indexed knowledge base", "Versioned retrieval and grounded-answer benchmark"], [
           "Vectorization is optional: lexical, hybrid, or graph retrieval may perform better for some content.",
+          "A raw cosine-similarity score is not a quality verdict. Its meaning depends on the embedding model, index, content, query distribution, and retrieval configuration.",
           "Chunk size, overlap, metadata, top-K, and reranking must be tuned together against realistic questions.",
+          "Version score distributions and calibrated thresholds with the embedding model, index, chunking strategy, reranker, and benchmark.",
           "Source permissions must be enforced before retrieved chunks enter the model context.",
           "Treat retrieved content as untrusted input and mitigate instructions hidden inside it."
-        ], "For representative and edge questions, the pipeline places sufficient authorized evidence in the model context and produces grounded answers with valid citations."),
+        ], "A reproducible, versioned benchmark shows that representative, edge, and no-answer queries retrieve sufficient authorized evidence and produce grounded answers with valid citations."),
         A("knowledge-operations", "Design knowledge operations", "Automate ingestion, validation, refresh, reconciliation, deletion, reindexing, and incident response.", "Data engineer", ["DataOps", "Operations", "Lineage"], [
           "Define change triggers, refresh frequency, and freshness service levels.",
           "Build validation, quarantine, replay, and reconciliation paths.",
@@ -643,15 +646,17 @@ window.LIFECYCLE_DATA = {
       },
       activities: [
         A("offline-evaluation", "Run task and component evaluations", "Measure retrieval, reasoning, tool use, workflow completion, groundedness, and regressions on controlled datasets.", "Evaluation lead", ["Evaluation", "Regression"], [
-          "Freeze versioned datasets and slice labels.",
-          "Run deterministic checks, calibrated model graders, and expert review.",
-          "Compare against baseline and previous release by slice.",
+          "Freeze an evaluation specification containing versioned datasets, slice labels, metric definitions, graders, prompts, thresholds, and regression tolerances.",
+          "Record the evaluated model, prompt, architecture, retrieval, tool, policy, and knowledge versions so every result is reproducible.",
+          "Run deterministic checks, calibrated model graders, retrieval metrics, and expert review.",
+          "Compare against the baseline and previous release by slice, using distributions and confidence intervals where appropriate.",
           "Triage failures into data, prompt, model, tool, policy, or design causes."
-        ], ["Evaluation report", "Failure taxonomy", "Regression suite"], [
+        ], ["Versioned evaluation report", "Evaluation lineage manifest", "Failure taxonomy and regression suite"], [
           "Report distributions and slices, not only averages.",
           "Investigate grader disagreement and low-confidence labels.",
-          "Include abstention and escalation quality."
-        ], "All release thresholds pass with no hidden critical failure slice."),
+          "Include abstention and escalation quality.",
+          "When a metric, grader, dataset, or threshold changes, run a bridge comparison against the prior evaluator before interpreting the trend."
+        ], "All release thresholds pass with no hidden critical failure slice, and every score is traceable to the evaluated system and evaluation-specification versions."),
         A("safety-red-team", "Perform safety and adversarial testing", "Challenge the system with abuse, injection, exfiltration, harmful requests, policy evasion, and excessive-agency scenarios.", "AI red team lead", ["Safety", "Security", "Red team"], [
           "Build attacks from the threat model and real misuse pathways.",
           "Test direct, indirect, multi-turn, multilingual, encoded, and cross-tool attacks.",
@@ -804,16 +809,19 @@ window.LIFECYCLE_DATA = {
           "Look beyond the final model output to the full causal chain.",
           "Track near misses as leading indicators."
         ], "Incidents produce verified containment, transparent accountability, and durable prevention."),
-        A("continuous-change", "Evolve models, prompts, tools, and knowledge", "Use controlled change management and regression evidence for every component that can alter behavior.", "MLOps lead", ["Change", "Evaluation", "MLOps"], [
+        A("continuous-change", "Evolve models, prompts, tools, and knowledge", "Use controlled change management and regression evidence for prompts, models, architecture, retrieval, tools, policies, knowledge, and evaluation criteria.", "MLOps lead", ["Change", "Evaluation", "MLOps"], [
           "Trigger changes from evidence, not unstructured preference.",
-          "Version the candidate and run impacted evaluation suites.",
+          "Version the candidate prompt, model, architecture, retrieval, tool, policy, and knowledge changes; map each change to the evaluation suites it can affect.",
+          "Run impacted suites with the approved evaluation specification and preserve the complete system-to-evaluation lineage.",
+          "If a dataset, metric, grader, or threshold must change, approve and version the rationale, then score representative builds with both old and new evaluators to preserve the trend line.",
           "Review risk and compatibility based on change type.",
           "Canary, monitor, and retain a tested rollback path."
-        ], ["Change proposal", "Regression comparison", "Promotion record"], [
+        ], ["Change proposal and impact map", "Versioned regression and evaluator comparison", "Promotion and metric-change record"], [
           "Provider-side model updates may create implicit changes.",
           "Knowledge updates can alter behavior as much as prompt changes.",
-          "Avoid optimizing one metric while degrading safety or cost."
-        ], "No behavioral change reaches users without proportionate evidence and rollback coverage."),
+          "Do not silently redefine a metric or move a threshold; this can make evaluator drift look like product improvement.",
+          "Avoid optimizing one metric while degrading safety, cost, or another critical slice."
+        ], "No system or evaluator change reaches users without traceable versions, proportionate evidence, an interpretable comparison with prior results, and rollback coverage."),
         A("value-cost-optimization", "Optimize value, performance, and cost", "Improve workflow outcomes and unit economics while preserving safety, quality, and user experience.", "Product manager", ["Value", "FinOps", "Optimization"], [
           "Analyze cost and latency by successful business outcome.",
           "Target waste in context, retrieval, routing, retries, tools, and idle capacity.",
