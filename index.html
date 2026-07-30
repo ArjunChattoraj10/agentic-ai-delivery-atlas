@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="An interactive, end-to-end guide for designing, building, releasing, and operating agentic AI solutions.">
+  <title>Agentic AI Delivery Atlas</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
+
+  <div class="ambient ambient-one" aria-hidden="true"></div>
+  <div class="ambient ambient-two" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <button class="brand" type="button" data-view="overview" aria-label="Open lifecycle overview">
+      <span class="brand-mark" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </span>
+      <span>
+        <strong>Delivery Atlas</strong>
+        <small>Agentic AI Lifecycle</small>
+      </span>
+    </button>
+
+    <nav class="topnav" aria-label="Primary navigation">
+      <button class="nav-link is-active" type="button" data-view="overview">Overview</button>
+      <button class="nav-link" type="button" data-view="library">Activity library</button>
+    </nav>
+
+    <div class="top-actions">
+      <button class="search-trigger" type="button" id="search-trigger" aria-label="Search the guide">
+        <span class="icon" data-icon="search"></span>
+        <span>Search</span>
+        <kbd>Ctrl K</kbd>
+      </button>
+      <button class="icon-button" id="theme-toggle" type="button" aria-label="Switch color theme">
+        <span class="icon" data-icon="sun"></span>
+      </button>
+      <button class="icon-button mobile-menu" id="mobile-menu" type="button" aria-label="Open navigation" aria-expanded="false">
+        <span class="icon" data-icon="menu"></span>
+      </button>
+    </div>
+  </header>
+
+  <div class="app-shell">
+    <aside class="stage-rail" id="stage-rail" aria-label="Lifecycle stages"></aside>
+    <main id="main-content" tabindex="-1"></main>
+  </div>
+
+  <dialog class="command-dialog" id="search-dialog" aria-labelledby="search-title">
+    <div class="command-head">
+      <span class="icon" data-icon="search"></span>
+      <label class="sr-only" id="search-title" for="global-search">Search activities and stages</label>
+      <input id="global-search" type="search" placeholder="Search activities, deliverables, risks..." autocomplete="off">
+      <kbd>Esc</kbd>
+    </div>
+    <div class="command-results" id="search-results"></div>
+  </dialog>
+
+  <div class="drawer-backdrop" id="drawer-backdrop" hidden></div>
+  <aside class="detail-drawer" id="detail-drawer" aria-labelledby="drawer-title" aria-hidden="true">
+    <div id="drawer-content"></div>
+  </aside>
+
+  <script src="lifecycle-data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
