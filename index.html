@@ -28,6 +28,7 @@
     <nav class="topnav" aria-label="Primary navigation">
       <button class="nav-link is-active" type="button" data-view="overview">Overview</button>
       <button class="nav-link" type="button" data-view="library">Activity Library</button>
+      <button class="nav-link" type="button" data-view="glossary">Glossary</button>
     </nav>
 
     <div class="top-actions">
@@ -54,7 +55,7 @@
     <div class="command-head">
       <span class="icon" data-icon="search"></span>
       <label class="sr-only" id="search-title" for="global-search">Search the full guide</label>
-      <input id="global-search" type="search" placeholder="Search activities, deliverables, risks..." autocomplete="off">
+      <input id="global-search" type="search" placeholder="Search terms, activities, deliverables, risks..." autocomplete="off">
       <kbd>Esc</kbd>
     </div>
     <div class="command-results" id="search-results"></div>
@@ -66,6 +67,7 @@
   </aside>
 
   <script src="lifecycle-data.js"></script>
+  <script src="glossary-data.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

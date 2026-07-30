@@ -2,6 +2,7 @@
   "use strict";
 
   const data = window.LIFECYCLE_DATA;
+  const glossary = window.GLOSSARY_DATA || [];
   const main = document.querySelector("#main-content");
   const rail = document.querySelector("#stage-rail");
   const drawer = document.querySelector("#detail-drawer");
@@ -18,6 +19,8 @@
   const activityById = new Map(allActivities.map(activity => [activity.id, activity]));
   const stageById = new Map(data.stages.map(stage => [stage.id, stage]));
   const trackById = new Map(data.continuousTracks.map(track => [track.id, track]));
+  const glossaryById = new Map(glossary.map(entry => [entry.id, entry]));
+  const glossaryByTerm = new Map(glossary.map(entry => [entry.term, entry]));
 
   let currentView = "overview";
   let currentStage = null;
@@ -93,6 +96,10 @@
     track.id,
     searchableText(track)
   ]));
+  const glossarySearchIndex = new Map(glossary.map(entry => [
+    entry.id,
+    searchableText(entry)
+  ]));
 
   const icons = {
     arrow: '<path d="M5 12h14M14 7l5 5-5 5"/>',
@@ -135,6 +142,7 @@
       <nav class="rail-mobile-nav" aria-label="Guide sections">
         <button class="nav-link" type="button" data-view="overview">Overview</button>
         <button class="nav-link" type="button" data-view="library">Activity Library</button>
+        <button class="nav-link" type="button" data-view="glossary">Glossary</button>
       </nav>
       <p class="rail-label">Delivery Path</p>
       <div class="stage-nav">
@@ -161,14 +169,15 @@
     });
   }
 
-  function navigate(view, stageId = null, updateHash = true) {
+  function navigate(view, targetId = null, updateHash = true) {
     currentView = view;
-    currentStage = view === "stage" ? stageId : null;
+    currentStage = view === "stage" ? targetId : null;
     rail.classList.remove("is-open");
     mobileMenu.setAttribute("aria-expanded", "false");
 
-    if (view === "stage") renderStage(stageById.get(stageId) || data.stages[0]);
+    if (view === "stage") renderStage(stageById.get(targetId) || data.stages[0]);
     else if (view === "library") renderLibrary();
+    else if (view === "glossary") renderGlossary();
     else renderOverview();
 
     setActiveNavigation();
@@ -177,8 +186,16 @@
     window.scrollTo({ top: 0, behavior: "smooth" });
 
     if (updateHash) {
-      const hash = view === "stage" ? `#stage/${stageId}` : `#${view}`;
+      const hash = view === "stage"
+        ? `#stage/${targetId}`
+        : view === "glossary" && targetId
+          ? `#glossary/${targetId}`
+          : `#${view}`;
       history.pushState(null, "", hash);
+    }
+
+    if (view === "glossary" && targetId) {
+      requestAnimationFrame(() => focusGlossaryTerm(targetId));
     }
   }
 
@@ -435,6 +452,124 @@
     hydrateIcons(grid);
   }
 
+  function renderGlossary() {
+    const categories = [...new Set(glossary.map(entry => entry.category))].sort();
+    const letters = [...new Set(glossary.map(entry => entry.term[0].toUpperCase()))].sort();
+    main.innerHTML = `
+      <header class="page-head glossary-head">
+        <div>
+          <p class="eyebrow">Agentic AI Reference</p>
+          <h1>Agentic AI Glossary</h1>
+          <p>Explore clear definitions for the architecture, retrieval, evaluation, security, governance, and operating concepts used throughout the delivery lifecycle.</p>
+        </div>
+        <div class="glossary-stat" aria-label="${glossary.length} glossary terms">
+          <strong>${glossary.length}</strong>
+          <span>Essential Terms</span>
+        </div>
+      </header>
+      <div class="filter-bar glossary-filter-bar">
+        <label class="field">
+          <span class="icon" data-icon="search"></span>
+          <input id="glossary-search" type="search" placeholder="Search terms and definitions..." autocomplete="off">
+        </label>
+        <label class="field">
+          <span class="icon" data-icon="filter"></span>
+          <select id="glossary-category" aria-label="Filter glossary by category">
+            <option value="all">All Categories</option>
+            ${categories.map(category => `<option value="${category}">${category}</option>`).join("")}
+          </select>
+        </label>
+      </div>
+      <nav class="alphabet-filter" aria-label="Filter glossary by first letter">
+        <button class="alphabet-button is-active" type="button" data-glossary-letter="all" aria-pressed="true">All</button>
+        ${letters.map(letter => `<button class="alphabet-button" type="button" data-glossary-letter="${letter}" aria-pressed="false">${letter}</button>`).join("")}
+      </nav>
+      <div class="results-meta">
+        <span id="glossary-count"></span>
+        <span>Select a term to reveal its definition and delivery context</span>
+      </div>
+      <div class="glossary-grid" id="glossary-grid"></div>
+    `;
+    main.dataset.glossaryLetter = "all";
+    updateGlossaryResults();
+  }
+
+  function updateGlossaryResults() {
+    const grid = document.querySelector("#glossary-grid");
+    if (!grid) return;
+    const query = document.querySelector("#glossary-search").value;
+    const category = document.querySelector("#glossary-category").value;
+    const letter = main.dataset.glossaryLetter || "all";
+    const matches = glossary.filter(entry =>
+      matchesSearch(glossarySearchIndex.get(entry.id), query)
+      && (category === "all" || entry.category === category)
+      && (letter === "all" || entry.term[0].toUpperCase() === letter)
+    );
+
+    document.querySelector("#glossary-count").textContent = `${matches.length} ${matches.length === 1 ? "term" : "terms"}`;
+    grid.innerHTML = matches.length ? matches.map(entry => `
+      <details class="glossary-card" id="glossary-${entry.id}">
+        <summary data-glossary-toggle>
+          <span>
+            <span class="glossary-category">${entry.category}</span>
+            <strong>${entry.term}</strong>
+          </span>
+          <span class="glossary-toggle" aria-hidden="true"></span>
+        </summary>
+        <div class="glossary-body">
+          <p class="glossary-definition">${entry.definition}</p>
+          <div class="glossary-context">
+            <span>Why It Matters</span>
+            <p>${entry.context}</p>
+          </div>
+          ${entry.related.length ? `
+            <div class="glossary-related">
+              <span>Related Terms</span>
+              <div>
+                ${entry.related.map(term => {
+                  const relatedEntry = glossaryByTerm.get(term);
+                  return relatedEntry
+                    ? `<button type="button" data-glossary="${relatedEntry.id}">${term}</button>`
+                    : `<span>${term}</span>`;
+                }).join("")}
+              </div>
+            </div>
+          ` : ""}
+        </div>
+      </details>
+    `).join("") : `
+      <div class="empty-state">
+        <span class="icon" data-icon="search"></span>
+        <h3>No Matching Terms</h3>
+        <p>Try a broader phrase, another category, or a different letter.</p>
+      </div>
+    `;
+    hydrateIcons(grid);
+  }
+
+  function focusGlossaryTerm(id) {
+    const entry = glossaryById.get(id);
+    if (!entry) return;
+    const search = document.querySelector("#glossary-search");
+    const category = document.querySelector("#glossary-category");
+    if (!search || !category) return;
+    search.value = "";
+    category.value = "all";
+    main.dataset.glossaryLetter = "all";
+    document.querySelectorAll("[data-glossary-letter]").forEach(button => {
+      const active = button.dataset.glossaryLetter === "all";
+      button.classList.toggle("is-active", active);
+      button.setAttribute("aria-pressed", String(active));
+    });
+    updateGlossaryResults();
+    const card = document.querySelector(`#glossary-${id}`);
+    if (card) {
+      card.open = true;
+      card.scrollIntoView({ behavior: "smooth", block: "center" });
+      card.querySelector("summary").focus({ preventScroll: true });
+    }
+  }
+
   function openActivity(id) {
     const activity = activityById.get(id);
     if (!activity) return;
@@ -631,6 +766,9 @@
 
   function updateSearchResults(query) {
     const normalized = query.trim();
+    const glossaryMatches = normalized
+      ? glossary.filter(entry => matchesSearch(glossarySearchIndex.get(entry.id), normalized)).slice(0, 8)
+      : [];
     const trackMatches = data.continuousTracks.filter(track =>
       matchesSearch(trackSearchIndex.get(track.id), normalized)
     ).slice(0, normalized ? 5 : 2);
@@ -642,6 +780,13 @@
     ).slice(0, normalized ? 8 : 5);
 
     searchResults.innerHTML = `
+      ${glossaryMatches.map(entry => `
+        <button class="search-result" type="button" data-glossary="${entry.id}">
+          <span class="search-result-icon glossary-result-icon">${entry.term[0].toUpperCase()}</span>
+          <span><strong>${entry.term}</strong><small>${entry.definition}</small></span>
+          <span class="search-result-type">Glossary</span>
+        </button>
+      `).join("")}
       ${trackMatches.map(track => `
         <button class="search-result" type="button" data-workstream="${track.id}">
           <span class="search-result-icon icon" style="--result-color:${track.color}" data-icon="${track.icon}"></span>
@@ -663,8 +808,8 @@
           <span class="search-result-type">Activity</span>
         </button>
       `).join("")}
-      ${!trackMatches.length && !stageMatches.length && !activityMatches.length ? `
-        <div class="empty-state"><span class="icon" data-icon="search"></span><h3>No Results</h3><p>Try a role, output, discipline, or stage name.</p></div>
+      ${!glossaryMatches.length && !trackMatches.length && !stageMatches.length && !activityMatches.length ? `
+        <div class="empty-state"><span class="icon" data-icon="search"></span><h3>No Results</h3><p>Try a term, role, output, discipline, or stage name.</p></div>
       ` : ""}
     `;
     hydrateIcons(searchResults);
@@ -683,10 +828,34 @@
     const stageButton = event.target.closest("button[data-stage], .stage-card[data-stage]");
     const activityButton = event.target.closest("[data-activity]");
     const workstreamButton = event.target.closest("[data-workstream]");
+    const glossaryButton = event.target.closest("[data-glossary]");
+    const glossaryLetterButton = event.target.closest("[data-glossary-letter]");
+    const glossaryToggle = event.target.closest("[data-glossary-toggle]");
     const actionButton = event.target.closest("[data-action]");
     const scrollButton = event.target.closest("[data-scroll]");
     const tabButton = event.target.closest("[data-drawer-tab]");
 
+    if (glossaryToggle) {
+      event.preventDefault();
+      const card = glossaryToggle.closest(".glossary-card");
+      if (card) card.open = !card.open;
+      return;
+    }
+    if (glossaryButton) {
+      if (searchDialog.open) searchDialog.close();
+      navigate("glossary", glossaryButton.dataset.glossary);
+      return;
+    }
+    if (glossaryLetterButton) {
+      main.dataset.glossaryLetter = glossaryLetterButton.dataset.glossaryLetter;
+      document.querySelectorAll("[data-glossary-letter]").forEach(button => {
+        const active = button === glossaryLetterButton;
+        button.classList.toggle("is-active", active);
+        button.setAttribute("aria-pressed", String(active));
+      });
+      updateGlossaryResults();
+      return;
+    }
     if (activityButton) {
       if (searchDialog.open) searchDialog.close();
       openActivity(activityButton.dataset.activity);
@@ -749,9 +918,11 @@
 
   main.addEventListener("input", event => {
     if (event.target.id === "library-search") updateLibraryResults();
+    if (event.target.id === "glossary-search") updateGlossaryResults();
   });
   main.addEventListener("change", event => {
     if (event.target.id === "stage-filter" || event.target.id === "tag-filter") updateLibraryResults();
+    if (event.target.id === "glossary-category") updateGlossaryResults();
   });
   searchInput.addEventListener("input", () => updateSearchResults(searchInput.value));
   document.querySelector("#search-trigger").addEventListener("click", openSearch);
@@ -768,7 +939,8 @@
   function routeFromHash() {
     const hash = location.hash.replace(/^#/, "");
     if (hash.startsWith("stage/")) navigate("stage", hash.split("/")[1], false);
-    else if (["library", "overview"].includes(hash)) navigate(hash, null, false);
+    else if (hash.startsWith("glossary/")) navigate("glossary", hash.split("/")[1], false);
+    else if (["library", "glossary", "overview"].includes(hash)) navigate(hash, null, false);
     else navigate("overview", null, false);
   }
 

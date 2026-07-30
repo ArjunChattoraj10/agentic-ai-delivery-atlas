@@ -10,6 +10,7 @@ An interactive guide to planning, building, evaluating, releasing, operating, an
 - Detailed guidance for 45 delivery activities
 - Plain-language explanations, implementation steps, evidence, and common considerations
 - Dedicated knowledge-base and Retrieval-Augmented Generation (RAG) guidance
+- Searchable Agentic AI glossary with 110 definitions across eight disciplines
 - Search, filtering, responsive layouts, and dark mode
 
 ## Run locally

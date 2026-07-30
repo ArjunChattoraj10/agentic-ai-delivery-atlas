@@ -31,7 +31,7 @@ jobs:
         shell: bash
         run: |
           mkdir _site
-          cp index.html styles.css lifecycle-data.js app.js logo.svg manifest.webmanifest _site/
+          cp index.html styles.css lifecycle-data.js glossary-data.js app.js logo.svg manifest.webmanifest _site/
           touch _site/.nojekyll
 
       - name: Configure GitHub Pages
