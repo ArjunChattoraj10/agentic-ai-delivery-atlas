@@ -189,7 +189,6 @@
                 <strong>${stage.assistedDuration}</strong>
               </div>
               <div class="stage-card-foot">
-                <span>${stage.activities.length} Essential Activities</span>
                 <span class="stage-card-arrow"><span class="icon" data-icon="arrow"></span></span>
               </div>
             </article>
@@ -211,7 +210,7 @@
               <span class="track-icon icon" data-icon="${track.icon}"></span>
               <h3>${titleCase(track.title)}</h3>
               <p>${track.summary}</p>
-              <span class="track-card-link">Deep Dive <span class="icon" data-icon="arrow"></span></span>
+              <span class="track-card-link" aria-hidden="true"><span class="icon" data-icon="arrow"></span></span>
             </article>
           `).join("")}
         </div>

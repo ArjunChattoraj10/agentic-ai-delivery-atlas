@@ -524,7 +524,7 @@ h3 { font-size: 20px; line-height: 1.2; }
 .stage-agent-time > span { display: flex; align-items: center; gap: 6px; font-weight: 750; }
 .stage-agent-time .icon { width: 14px; height: 14px; }
 .stage-agent-time strong { white-space: nowrap; font-size: 11px; }
-.stage-card-foot { margin-top: auto; display: flex; align-items: center; justify-content: space-between; font-size: 11px; font-weight: 750; }
+.stage-card-foot { margin-top: auto; display: flex; align-items: center; justify-content: flex-end; }
 .stage-card-arrow { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; background: var(--surface-alt); transition: .2s ease; }
 .stage-card:hover .stage-card-arrow { color: white; background: var(--stage-color); transform: translateX(2px); }
 
@@ -559,12 +559,10 @@ h3 { font-size: 20px; line-height: 1.2; }
 .track-card-link {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   margin-top: auto;
   padding-top: 18px;
   color: var(--track-color);
-  font-size: 11px;
-  font-weight: 800;
 }
 .track-card-link .icon { width: 15px; height: 15px; transition: transform .2s ease; }
 .track-card:hover .track-card-link .icon { transform: translateX(3px); }
