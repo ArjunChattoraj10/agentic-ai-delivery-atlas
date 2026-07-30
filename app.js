@@ -17,6 +17,7 @@
   );
   const activityById = new Map(allActivities.map(activity => [activity.id, activity]));
   const stageById = new Map(data.stages.map(stage => [stage.id, stage]));
+  const trackById = new Map(data.continuousTracks.map(track => [track.id, track]));
 
   let currentView = "overview";
   let currentStage = null;
@@ -171,10 +172,11 @@
         </div>
         <div class="track-grid">
           ${data.continuousTracks.map(track => `
-            <article class="track-card" style="--track-color:${track.color}">
+            <article class="track-card" style="--track-color:${track.color}" data-workstream="${track.id}" role="button" tabindex="0">
               <span class="track-icon icon" data-icon="${track.icon}"></span>
               <h3>${track.title}</h3>
               <p>${track.summary}</p>
+              <span class="track-card-link">Deep dive <span class="icon" data-icon="arrow"></span></span>
             </article>
           `).join("")}
         </div>
@@ -460,6 +462,93 @@
     drawer.querySelector(".drawer-close").focus();
   }
 
+  function openWorkstream(id) {
+    const track = trackById.get(id);
+    if (!track) return;
+    const initials = track.title.split(/\s+/).map(word => word[0]).join("").slice(0, 2).toUpperCase();
+
+    drawerContent.innerHTML = `
+      <div class="drawer-head">
+        <span class="drawer-stage">Continuous workstream · Always on</span>
+        <button class="drawer-close" type="button" data-action="close-drawer" aria-label="Close details">
+          <span class="icon" data-icon="close"></span>
+        </button>
+      </div>
+      <div class="drawer-main workstream-drawer" style="--drawer-color:${track.color}">
+        <span class="workstream-hero-icon icon" data-icon="${track.icon}"></span>
+        <h2 id="drawer-title">${track.title}</h2>
+        <p class="drawer-lead">${track.summary}</p>
+
+        <div class="drawer-owner">
+          <span class="owner-avatar">${initials}</span>
+          <span><strong>Accountable ownership</strong><span>${track.accountable}</span></span>
+        </div>
+
+        <div class="drawer-tabs" role="tablist" aria-label="${track.title} details">
+          <button class="drawer-tab is-active" type="button" role="tab" aria-selected="true" data-drawer-tab="overview">Overview</button>
+          <button class="drawer-tab" type="button" role="tab" aria-selected="false" data-drawer-tab="lifecycle">Lifecycle lens</button>
+          <button class="drawer-tab" type="button" role="tab" aria-selected="false" data-drawer-tab="evidence">Evidence</button>
+        </div>
+
+        <div class="drawer-panel" data-drawer-panel="overview">
+          <section class="drawer-section simple-explanation">
+            <span class="explanation-label">Explanation</span>
+            <p>${track.explanation}</p>
+          </section>
+          <section class="drawer-section">
+            <h3>Objective</h3>
+            <p>${track.objective}</p>
+          </section>
+          <section class="drawer-section">
+            <h3>Core responsibilities</h3>
+            <ul class="workstream-list">${track.responsibilities.map(item => `<li>${item}</li>`).join("")}</ul>
+          </section>
+          <section class="drawer-section">
+            <h3>Key partners</h3>
+            <div class="partner-cloud">${track.partners.map(partner => `<span class="tag">${partner}</span>`).join("")}</div>
+          </section>
+        </div>
+
+        <div class="drawer-panel" data-drawer-panel="lifecycle" hidden>
+          <section class="drawer-section">
+            <h3>Questions to ask at every stage</h3>
+            <p>This workstream continues throughout delivery. Use these questions to keep it active as the product evolves.</p>
+            <div class="lifecycle-lens">
+              ${track.lifecycle.map(([stage, question], index) => `
+                <article class="lifecycle-lens-item">
+                  <span class="lens-number">${String(index + 1).padStart(2, "0")}</span>
+                  <span><strong>${stage}</strong><p>${question}</p></span>
+                </article>
+              `).join("")}
+            </div>
+          </section>
+        </div>
+
+        <div class="drawer-panel" data-drawer-panel="evidence" hidden>
+          <section class="drawer-section">
+            <h3>Evidence to maintain</h3>
+            <ul class="output-list">${track.evidence.map(item => `<li>${item}</li>`).join("")}</ul>
+          </section>
+          <section class="drawer-section">
+            <h3>Signals to monitor</h3>
+            <ul class="signal-list">${track.indicators.map(item => `<li>${item}</li>`).join("")}</ul>
+          </section>
+          <section class="drawer-section">
+            <h3>Common failure patterns</h3>
+            <ul class="consideration-list">${track.pitfalls.map(item => `<li>${item}</li>`).join("")}</ul>
+          </section>
+        </div>
+      </div>
+    `;
+    drawer.style.setProperty("--drawer-color", track.color);
+    hydrateIcons(drawer);
+    drawerBackdrop.hidden = false;
+    drawer.classList.add("is-open");
+    drawer.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+    drawer.querySelector(".drawer-close").focus();
+  }
+
   function closeDrawer() {
     drawer.classList.remove("is-open");
     drawer.setAttribute("aria-hidden", "true");
@@ -476,6 +565,12 @@
 
   function updateSearchResults(query) {
     const normalized = query.trim().toLowerCase();
+    const trackMatches = data.continuousTracks.filter(track =>
+      !normalized || [
+        track.title, track.summary, track.explanation, track.objective, track.accountable,
+        ...track.partners, ...track.responsibilities, ...track.evidence, ...track.indicators
+      ].join(" ").toLowerCase().includes(normalized)
+    ).slice(0, normalized ? 5 : 2);
     const stageMatches = data.stages.filter(stage =>
       !normalized || `${stage.title} ${stage.description} ${stage.tagline}`.toLowerCase().includes(normalized)
     ).slice(0, normalized ? 4 : 3);
@@ -487,6 +582,13 @@
     ).slice(0, normalized ? 8 : 5);
 
     searchResults.innerHTML = `
+      ${trackMatches.map(track => `
+        <button class="search-result" type="button" data-workstream="${track.id}">
+          <span class="search-result-icon icon" style="--result-color:${track.color}" data-icon="${track.icon}"></span>
+          <span><strong>${track.title}</strong><small>Continuous across all nine lifecycle stages</small></span>
+          <span class="search-result-type">Workstream</span>
+        </button>
+      `).join("")}
       ${stageMatches.map(stage => `
         <button class="search-result" type="button" data-stage="${stage.id}">
           <span class="search-result-icon" style="--result-color:${stage.color}">${String(stage.number).padStart(2, "0")}</span>
@@ -501,7 +603,7 @@
           <span class="search-result-type">Activity</span>
         </button>
       `).join("")}
-      ${!stageMatches.length && !activityMatches.length ? `
+      ${!trackMatches.length && !stageMatches.length && !activityMatches.length ? `
         <div class="empty-state"><span class="icon" data-icon="search"></span><h3>No results</h3><p>Try a role, output, discipline, or stage name.</p></div>
       ` : ""}
     `;
@@ -520,6 +622,7 @@
     const viewButton = event.target.closest("[data-view]");
     const stageButton = event.target.closest("button[data-stage], .stage-card[data-stage]");
     const activityButton = event.target.closest("[data-activity]");
+    const workstreamButton = event.target.closest("[data-workstream]");
     const actionButton = event.target.closest("[data-action]");
     const scrollButton = event.target.closest("[data-scroll]");
     const tabButton = event.target.closest("[data-drawer-tab]");
@@ -527,6 +630,11 @@
     if (activityButton) {
       if (searchDialog.open) searchDialog.close();
       openActivity(activityButton.dataset.activity);
+      return;
+    }
+    if (workstreamButton) {
+      if (searchDialog.open) searchDialog.close();
+      openWorkstream(workstreamButton.dataset.workstream);
       return;
     }
     if (stageButton) {
@@ -571,10 +679,11 @@
       openSearch();
     }
     if (event.key === "Escape" && drawer.classList.contains("is-open")) closeDrawer();
-    const card = event.target.closest(".stage-card");
+    const card = event.target.closest(".stage-card, .track-card");
     if (card && (event.key === "Enter" || event.key === " ")) {
       event.preventDefault();
-      navigate("stage", card.dataset.stage);
+      if (card.matches(".stage-card")) navigate("stage", card.dataset.stage);
+      else openWorkstream(card.dataset.workstream);
     }
   });
 

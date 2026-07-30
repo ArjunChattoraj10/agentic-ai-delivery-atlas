@@ -74,6 +74,144 @@ const A = (id, title, summary, owner, tags, steps, outputs, considerations, evid
   owner, tags, steps, outputs, considerations, evidence
 });
 
+const WORKSTREAM_DETAILS = {
+  governance: {
+    explanation: "Governance is how the organization stays in control of the AI product. It makes clear who may decide what, which evidence is required, who accepts risk, and how every important choice can be traced later.",
+    objective: "Keep the product aligned to its approved purpose, policies, obligations, and risk appetite while enabling timely, accountable decisions.",
+    accountable: "Business product owner or designated AI system owner",
+    partners: ["Executive sponsor", "Enterprise risk", "Legal and compliance", "Architecture", "Data owners", "Security", "Internal audit"],
+    responsibilities: [
+      "Define accountable owners, decision rights, approval thresholds, and escalation paths.",
+      "Classify the use case and determine which policies, regulations, and assurance obligations apply.",
+      "Maintain traceability from requirements and risks to controls, tests, approvals, releases, and incidents.",
+      "Operate lifecycle gates using current evidence, explicit exceptions, and time-limited risk acceptance.",
+      "Review actual use, material changes, residual risk, and continued fitness on a defined cadence."
+    ],
+    lifecycle: [
+      ["Discover", "Who owns the outcome, and is the proposed use permitted and worth governing?"],
+      ["Define", "Which decisions require approval, and what evidence will each gate require?"],
+      ["Knowledge", "Who authorizes each source, purpose, retention rule, and data exception?"],
+      ["Foundation", "Do architecture, vendors, models, and controls satisfy enterprise policy?"],
+      ["Build", "Can every prompt, policy, tool, knowledge, and code change be traced to an owner?"],
+      ["Evaluate", "Do results support release, and who accepts any documented residual risk?"],
+      ["Release", "Is the deployed version approved, attributable, reversible, and within scope?"],
+      ["Operate", "Has actual use, regulation, risk, or system behavior changed enough to require review?"],
+      ["Retire", "Who confirms obligations, records, dependencies, and closure evidence are complete?"]
+    ],
+    evidence: ["System and use-case record", "Lifecycle RACI and decision log", "Risk, control, and requirement traceability", "Gate approvals and exception register", "Periodic assurance and continued-use decisions"],
+    indicators: ["Overdue approvals or exceptions", "Unowned risks and controls", "Changes without linked evidence", "Use outside approved purpose or population", "Repeat findings and unresolved audit actions"],
+    pitfalls: ["Treating governance as paperwork after engineering", "Committees with shared discussion but no accountable decision-maker", "Permanent exceptions with no expiry or compensating control", "Reusing an old approval after the purpose, model, data, tools, or autonomy changes"]
+  },
+  security: {
+    explanation: "Security and privacy protect people, information, systems, and business operations from misuse or exposure. For agents, this also means stopping untrusted content from manipulating the model or tools into doing something unauthorized.",
+    objective: "Prevent, detect, contain, and recover from unauthorized access, data disclosure, malicious instructions, unsafe tool use, vulnerable dependencies, and privacy violations.",
+    accountable: "Security architect, with the data controller or privacy owner accountable for privacy obligations",
+    partners: ["Product and engineering", "Identity and platform teams", "Data owners", "Privacy and legal", "Security operations", "AI red team", "Third-party risk"],
+    responsibilities: [
+      "Threat-model users, content, models, memory, agents, tools, identities, dependencies, and trust boundaries.",
+      "Enforce least privilege, user-context authorization, network boundaries, secrets protection, and separation of environments.",
+      "Classify and minimize data; control collection, prompts, retrieval, traces, retention, residency, deletion, and vendor processing.",
+      "Secure the software and model supply chain through approved packages, licenses, provenance, scanning, pinning, and patching.",
+      "Test prompt injection, exfiltration, confused-deputy behavior, excessive agency, denial of service, and incident containment."
+    ],
+    lifecycle: [
+      ["Discover", "What could be exposed or harmed, and is the proposed use acceptable for this data class?"],
+      ["Define", "What security, privacy, identity, retention, and action-authorization requirements apply?"],
+      ["Knowledge", "Can source permissions, deletion, provenance, and sensitive-data controls survive ingestion and retrieval?"],
+      ["Foundation", "Where are the trust boundaries, threats, secrets, networks, identities, and third parties?"],
+      ["Build", "Are prompts and tool outputs treated as untrusted, and are hard controls enforced outside the model?"],
+      ["Evaluate", "Can adversaries cause unauthorized disclosure, action, persistence, cost, or loss of availability?"],
+      ["Release", "Are artifacts, configurations, credentials, attestations, and rollback controls production-ready?"],
+      ["Operate", "Can monitoring detect attacks and privacy events, and can responders contain them quickly?"],
+      ["Retire", "Have access, secrets, integrations, data copies, indexes, memory, logs, and vendor holdings been removed?"]
+    ],
+    evidence: ["Threat model and data-flow diagrams", "Privacy impact and data-processing records", "Access, authorization, and deletion test results", "Dependency inventory and security attestations", "Red-team findings, incident runbooks, and recovery exercises"],
+    indicators: ["Unauthorized or denied tool calls", "Prompt-injection and policy events", "Sensitive-data findings in prompts, outputs, or traces", "Critical vulnerabilities and patch age", "Time to detect, contain, revoke, and recover"],
+    pitfalls: ["Using prompts as an authorization boundary", "Flattening source permissions in a shared vector index", "Logging full sensitive conversations by default", "Giving an agent broad tools because the model is expected to behave", "Testing only direct user attacks while ignoring malicious retrieved content"]
+  },
+  "responsible-ai": {
+    explanation: "Responsible AI is the discipline of making sure the product is appropriate for people and society, not merely technically impressive. It examines who may benefit or be harmed, how much control people retain, and whether the system is understandable and fair enough for its context.",
+    objective: "Deliver useful AI while protecting human agency, safety, fairness, accessibility, transparency, contestability, and accountability.",
+    accountable: "Product owner, supported by a Responsible AI or model-risk lead",
+    partners: ["Domain experts", "UX research and accessibility", "Legal and compliance", "Data science and evaluation", "Security and safety", "Affected users and communities"],
+    responsibilities: [
+      "Assess intended purpose, affected people, foreseeable misuse, severity, reversibility, and prohibited applications.",
+      "Set proportionate autonomy, meaningful human oversight, escalation, appeal, correction, and safe-stop mechanisms.",
+      "Design transparent experiences that communicate capability, limitation, uncertainty, evidence, and system involvement.",
+      "Evaluate quality, fairness, safety, accessibility, and reliance across relevant user, language, and scenario slices.",
+      "Monitor emerging harms, distribution shifts, complaints, near misses, and use beyond the approved purpose."
+    ],
+    lifecycle: [
+      ["Discover", "Is this an appropriate use of AI, who is affected, and what harms or power imbalances could result?"],
+      ["Define", "What autonomy, oversight, transparency, accessibility, appeal, and prohibited behaviors are required?"],
+      ["Knowledge", "Whose perspectives are missing, and could source quality or representation create unequal outcomes?"],
+      ["Foundation", "Do the selected models and vendors support the required safety, language, accessibility, and transparency needs?"],
+      ["Build", "Can users understand, question, correct, stop, and recover from the agent's behavior?"],
+      ["Evaluate", "Do quality and harm measures pass for every material user and scenario slice, not just on average?"],
+      ["Release", "Are users informed and trained, and is rollout constrained enough to detect unexpected impact?"],
+      ["Operate", "Are complaints, overrides, reliance, emerging harms, and purpose drift being reviewed?"],
+      ["Retire", "Are users supported through transition, and can prior consequential outcomes still be challenged or corrected?"]
+    ],
+    evidence: ["AI impact assessment and prohibited-use decision", "Autonomy and human-oversight matrix", "Transparency, accessibility, and UX research findings", "Slice-based quality, fairness, and safety evaluations", "Harm monitoring, complaints, appeals, and remediation records"],
+    indicators: ["Quality gaps between user or scenario slices", "Override, correction, abstention, and escalation rates", "Accessibility defects and task-completion gaps", "User understanding and appropriate-reliance measures", "Reported harms, complaints, appeals, and near misses"],
+    pitfalls: ["Reducing Responsible AI to a generic principles checklist", "Assuming a human approval click automatically creates meaningful oversight", "Reporting only average accuracy", "Using fluent explanations as proof of correctness", "Monitoring technical failures while ignoring human and societal impact"]
+  },
+  finops: {
+    explanation: "FinOps connects AI spending to useful outcomes. It helps the team understand what each successful task costs, control unpredictable model and agent consumption, and choose designs that are fast and efficient without sacrificing safety or quality.",
+    objective: "Sustain positive unit economics and responsible resource use through measurable budgets, capacity planning, architectural efficiency, and benefits realization.",
+    accountable: "Product owner for value and budget, with an engineering or FinOps lead for consumption",
+    partners: ["Finance", "Platform and cloud teams", "AI and data engineering", "Procurement", "SRE and operations", "Sustainability specialists", "Business analytics"],
+    responsibilities: [
+      "Establish the current cost baseline, value hypothesis, budget, adoption assumptions, and total cost of ownership.",
+      "Model and measure consumption across tokens, models, retrieval, tools, storage, compute, networking, observability, and human review.",
+      "Apply budgets, quotas, rate limits, caching, routing, bounded loops, context limits, and capacity controls.",
+      "Optimize cost and latency per successful business outcome rather than per isolated model call.",
+      "Track realized benefits, forecast demand, manage vendor commitments, and consider energy and resource efficiency."
+    ],
+    lifecycle: [
+      ["Discover", "What is the current cost of the workflow, what value is expected, and what spend would still make the case viable?"],
+      ["Define", "What unit-cost, latency, capacity, budget, and sustainability guardrails must the product meet?"],
+      ["Knowledge", "What will ingestion, embedding, storage, refresh, retrieval, reranking, and data transfer cost?"],
+      ["Foundation", "Which model, region, architecture, and commercial terms best balance quality, resilience, speed, and cost?"],
+      ["Build", "Are context, routing, retries, loops, tool calls, caching, and telemetry designed to prevent waste?"],
+      ["Evaluate", "What do realistic load, long-tail latency, failure, and successful-task economics show?"],
+      ["Release", "Are cohort limits, alerts, forecasts, and budget owners ready for real demand?"],
+      ["Operate", "Is unit value improving, and do demand, provider pricing, or quality changes require optimization?"],
+      ["Retire", "Have contracts, resources, indexes, storage, monitoring, and residual charges been closed?"]
+    ],
+    evidence: ["Baseline and benefits model", "Total-cost and capacity forecast", "Cost allocation and unit-economics dashboard", "Performance, load, and cost benchmark", "Optimization experiments and benefits-realization reports"],
+    indicators: ["Cost per successful outcome", "Tokens, latency, and tool calls per task", "Budget variance and forecast accuracy", "Cache, routing, retry, and fallback efficiency", "Realized benefit, adoption, and avoided-work measures"],
+    pitfalls: ["Optimizing token price while ignoring failed tasks and human rework", "Allowing retries or multi-agent loops to multiply silently", "Treating cloud spend as the full cost while excluding review, support, change, and compliance", "Caching without freshness, privacy, and permission controls", "Claiming benefits from activity counts rather than business outcomes"]
+  },
+  adoption: {
+    explanation: "People and adoption make the new product part of real work. This workstream prepares users, managers, support teams, and process owners for changed responsibilities so the agent is used appropriately and does not become an unsupported demonstration.",
+    objective: "Achieve sustained, safe use by aligning workflows, roles, skills, incentives, communications, support, and feedback with the product's intended value.",
+    accountable: "Business change owner or product owner",
+    partners: ["Representative users", "People managers", "Learning and development", "Communications", "UX research", "Service desk and operations", "HR and employee relations"],
+    responsibilities: [
+      "Map affected users, roles, workflows, responsibilities, incentives, concerns, and readiness.",
+      "Co-design the experience and operating process with representative users rather than imposing a technical workflow.",
+      "Provide scenario-based training on capability, limitation, verification, oversight, escalation, and failure recovery.",
+      "Prepare communications, champions, managers, office hours, support tiers, knowledge articles, and feedback channels.",
+      "Measure adoption, appropriate use, workarounds, trust, workload, proficiency, satisfaction, and realized outcomes."
+    ],
+    lifecycle: [
+      ["Discover", "Whose work changes, what problem do they recognize, and who will sponsor the behavioral change?"],
+      ["Define", "How should the future workflow, responsibilities, controls, accessibility, and support experience work?"],
+      ["Knowledge", "Who owns source content, and how will experts maintain and correct organizational knowledge?"],
+      ["Foundation", "Are environments, access, devices, channels, support capacity, and local constraints ready for users?"],
+      ["Build", "Have representative users shaped the interface, guidance, feedback, and recovery paths?"],
+      ["Evaluate", "Can users complete real work, recognize errors, avoid overreliance, and escalate without coaching?"],
+      ["Release", "Are training, communications, champions, managers, support, and pilot cohorts ready?"],
+      ["Operate", "Are adoption, proficiency, workarounds, feedback, workload, and outcome measures driving improvements?"],
+      ["Retire", "How will users, processes, responsibilities, integrations, and historical decisions transition safely?"]
+    ],
+    evidence: ["Stakeholder and change-impact assessment", "Future-state workflow and role map", "Training, communications, and manager toolkit", "Support model, knowledge articles, and service acceptance", "Adoption, proficiency, feedback, and benefits dashboard"],
+    indicators: ["Active and repeat use in intended workflows", "Task success, proficiency, and time to competence", "Verification, correction, override, and escalation behavior", "Support demand, workarounds, abandonment, and shadow use", "User workload, confidence, satisfaction, and realized outcomes"],
+    pitfalls: ["Treating launch communications as change management", "Training only the happy path instead of limitations and failure recognition", "Measuring logins instead of useful and appropriate use", "Ignoring role anxiety, job impact, incentives, and manager behavior", "Leaving the build team as the permanent undocumented support organization"]
+  }
+};
+
 window.LIFECYCLE_DATA = {
   continuousTracks: [
     {
@@ -81,35 +219,40 @@ window.LIFECYCLE_DATA = {
       title: "Governance & assurance",
       icon: "scale",
       color: "#5576b8",
-      summary: "Decision rights, evidence, approvals, traceability, and policy alignment at every gate."
+      summary: "Decision rights, evidence, approvals, traceability, and policy alignment at every gate.",
+      ...WORKSTREAM_DETAILS.governance
     },
     {
       id: "security",
       title: "Security & privacy",
       icon: "shield",
       color: "#167a67",
-      summary: "Threat modeling, identity, data protection, supply chain controls, and adversarial testing by design."
+      summary: "Threat modeling, identity, data protection, supply chain controls, and adversarial testing by design.",
+      ...WORKSTREAM_DETAILS.security
     },
     {
       id: "responsible-ai",
       title: "Responsible AI",
       icon: "spark",
       color: "#a66256",
-      summary: "Fairness, transparency, human agency, safety, accessibility, and accountable use throughout delivery."
+      summary: "Fairness, transparency, human agency, safety, accessibility, and accountable use throughout delivery.",
+      ...WORKSTREAM_DETAILS["responsible-ai"]
     },
     {
       id: "finops",
       title: "FinOps & sustainability",
       icon: "chart",
       color: "#d39834",
-      summary: "Token economics, capacity, budgets, latency, carbon-aware choices, and value realization."
+      summary: "Token economics, capacity, budgets, latency, carbon-aware choices, and value realization.",
+      ...WORKSTREAM_DETAILS.finops
     },
     {
       id: "adoption",
       title: "People & adoption",
       icon: "people",
       color: "#72466b",
-      summary: "Role changes, training, communications, support, feedback, and durable operating ownership."
+      summary: "Role changes, training, communications, support, feedback, and durable operating ownership.",
+      ...WORKSTREAM_DETAILS.adoption
     }
   ],
 

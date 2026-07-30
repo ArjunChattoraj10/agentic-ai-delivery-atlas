@@ -6,7 +6,7 @@ An interactive guide to planning, building, evaluating, releasing, operating, an
 
 ## Highlights
 
-- Nine lifecycle stages and five continuous workstreams
+- Nine lifecycle stages and five continuous workstreams with dedicated deep dives
 - Detailed guidance for 45 delivery activities
 - Plain-language explanations, implementation steps, evidence, and common considerations
 - Dedicated knowledge-base and Retrieval-Augmented Generation (RAG) guidance
