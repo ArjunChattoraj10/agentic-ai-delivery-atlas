@@ -462,10 +462,6 @@
           <h1>Agentic AI Glossary</h1>
           <p>Explore clear definitions for the architecture, retrieval, evaluation, security, governance, and operating concepts used throughout the delivery lifecycle.</p>
         </div>
-        <div class="glossary-stat" aria-label="${glossary.length} glossary terms">
-          <strong>${glossary.length}</strong>
-          <span>Essential Terms</span>
-        </div>
       </header>
       <div class="filter-bar glossary-filter-bar">
         <label class="field">
